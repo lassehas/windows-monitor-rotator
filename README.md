@@ -27,6 +27,15 @@ Right-click the tray icon, pick a monitor, pick a rotation — done.
 
 Place an `.ico` file named `app.ico` in the project root. It should contain at least 16x16 and 32x32 variants.
 
+A ready-made `app.ico` is included. To regenerate it (or tweak the design), run the bundled Python script:
+
+```
+pip install Pillow
+python generate_icon.py
+```
+
+This creates a multi-resolution `.ico` (16, 32, 48, 256 px) with a circular rotation arrow on a blue rounded-rectangle background.
+
 If you don't have one, you can skip the custom icon by removing `resource.rc` from `CMakeLists.txt`:
 
 ```cmake
