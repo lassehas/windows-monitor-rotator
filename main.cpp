@@ -90,6 +90,14 @@ static void EnumerateMonitors()
 }
 
 // ---------------------------------------------------------------------------
+// IsPortrait — true for 90° or 270°
+// ---------------------------------------------------------------------------
+static bool IsPortrait(DWORD orientation)
+{
+    return orientation == DMDO_90 || orientation == DMDO_270;
+}
+
+// ---------------------------------------------------------------------------
 // SupportsRotation — check if a given orientation is supported by the driver
 // ---------------------------------------------------------------------------
 static bool SupportsRotation(LPCWSTR deviceName, DWORD currentOrientation, DWORD targetOrientation)
@@ -115,14 +123,6 @@ static bool SupportsRotation(LPCWSTR deviceName, DWORD currentOrientation, DWORD
     dm.dmFields = DM_DISPLAYORIENTATION | DM_PELSWIDTH | DM_PELSHEIGHT;
 
     return ChangeDisplaySettingsEx(deviceName, &dm, NULL, CDS_TEST, NULL) == DISP_CHANGE_SUCCESSFUL;
-}
-
-// ---------------------------------------------------------------------------
-// IsPortrait — true for 90° or 270°
-// ---------------------------------------------------------------------------
-static bool IsPortrait(DWORD orientation)
-{
-    return orientation == DMDO_90 || orientation == DMDO_270;
 }
 
 // ---------------------------------------------------------------------------
