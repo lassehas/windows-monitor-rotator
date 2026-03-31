@@ -92,16 +92,29 @@ static void EnumerateMonitors()
 // ---------------------------------------------------------------------------
 // SupportsRotation — check if a given orientation is supported by the driver
 // ---------------------------------------------------------------------------
-static bool SupportsRotation(LPCWSTR deviceName, DWORD targetOrientation)
+static bool SupportsRotation(LPCWSTR deviceName, DWORD currentOrientation, DWORD targetOrientation)
 {
+    // Current orientation is always supported
+    if (targetOrientation == currentOrientation)
+        return true;
+
+    // Use CDS_TEST to ask the driver if it would accept this rotation
     DEVMODE dm = {};
     dm.dmSize = sizeof(dm);
-    for (DWORD i = 0; EnumDisplaySettingsEx(deviceName, i, &dm, 0); i++) {
-        if (dm.dmDisplayOrientation == targetOrientation)
-            return true;
-        dm.dmSize = sizeof(dm); // reset
+    if (!EnumDisplaySettingsEx(deviceName, ENUM_CURRENT_SETTINGS, &dm, 0))
+        return false;
+
+    // Swap width/height if crossing landscape/portrait boundary
+    if (IsPortrait(currentOrientation) != IsPortrait(targetOrientation)) {
+        DWORD temp = dm.dmPelsWidth;
+        dm.dmPelsWidth = dm.dmPelsHeight;
+        dm.dmPelsHeight = temp;
     }
-    return false;
+
+    dm.dmDisplayOrientation = targetOrientation;
+    dm.dmFields = DM_DISPLAYORIENTATION | DM_PELSWIDTH | DM_PELSHEIGHT;
+
+    return ChangeDisplaySettingsEx(deviceName, &dm, NULL, CDS_TEST, NULL) == DISP_CHANGE_SUCCESSFUL;
 }
 
 // ---------------------------------------------------------------------------
@@ -166,7 +179,7 @@ static HMENU BuildContextMenu()
                 flags |= MF_CHECKED;
 
             // Gray out unsupported rotations
-            if (!SupportsRotation(g_monitors[m].deviceName, rot))
+            if (!SupportsRotation(g_monitors[m].deviceName, g_monitors[m].currentRotation, rot))
                 flags |= MF_GRAYED;
 
             AppendMenu(hSub, flags, MENU_ID(m, rot), ROTATION_LABELS[rot]);
